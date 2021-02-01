@@ -1,12 +1,5 @@
-import { HttpClient } from '@angular/common/http';
 import {Component, OnInit} from '@angular/core'
-import {delay} from 'rxjs/operators'
-
-export interface Todo {
-  title: string,
-  completed: boolean,
-  id?: number
-}
+import { Todo, TodosService } from './todos.service';
 
 @Component({
   selector: 'app-root',
@@ -17,8 +10,9 @@ export class AppComponent implements OnInit {
   todos: Todo[] = []
   title: string = ''
   loading: boolean = false
+  error:string = ''
 
-  constructor(private client: HttpClient){}
+  constructor(private todosService: TodosService){}
 
   ngOnInit() {
     this.fetchTodo()
@@ -26,28 +20,36 @@ export class AppComponent implements OnInit {
 
   addTodo() {
     if(!this.title) return
-
-    const todo: Todo = {
+    
+    this.todosService.addTodo({
       title: this.title,
       completed: false
-    }
-    
-    this.client.post<Todo>('https://jsonplaceholder.typicode.com/todos', todo)
-      .subscribe(todo => this.todos.push(todo))
+    }).subscribe(
+      todo => this.todos.push(todo),
+      error => this.error = error.message
+    )
   }
 
   fetchTodo() {
     this.loading = true
-    this.client.get<Todo[]>('https://jsonplaceholder.typicode.com/todos?_limit=5')
-      .pipe(delay(2000))
-      .subscribe(todos => {
+    this.todosService.fetchTodos().subscribe(todos => {
         this.todos = todos
         this.loading = false
-      })
+      }, error => this.error = error.message
+    )
   }
 
   removeTodo(id: number = 0) {
-    this.client.delete<void>(`https://jsonplaceholder.typicode.com/todos/${id}`)
-      .subscribe(() => this.todos = this.todos.filter(todo => todo.id !== id))
+    this.todosService.removeTodo(id).subscribe(
+      () => this.todos = this.todos.filter(todo => todo.id !== id),
+      error => this.error = error.message
+    )
+  }
+
+  completeTodo(id: number = 0) {
+    this.todosService.completeTodo(id).subscribe(
+      todo => this.todos.find(t => t.id === todo.id).completed = true,
+      error => this.error = error.message
+    )
   }
 }
