@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, throwError } from "rxjs";
 import {catchError, delay} from 'rxjs/operators'
@@ -21,8 +21,9 @@ export class TodosService {
   }
 
   fetchTodos(): Observable<Todo[]> {
-    return this.client.get<Todo[]>('https://jsonplaceholder.typicode.com/todos?_limit=5')
-      .pipe(
+    return this.client.get<Todo[]>('https://jsonplaceholder.typicode.com/todos', {
+      params: new HttpParams().set('_limit', '3')
+    }).pipe(
         delay(1000),
         catchError(error => throwError(error))
       )
